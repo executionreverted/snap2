@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "autopass-mobile-example",
-    "slug": "autopass-mobile-example",
+    "name": "snapper",
+    "slug": "snapper",
     "version": "1.0.0",
     "newArchEnabled": true,
     "orientation": "portrait",
-    "scheme": "to.holepunch.bare.expo",
+    "scheme": "to.caner.snapper.expo",
     "icon": "./assets/images/icon.png",
     "userInterfaceStyle": "automatic",
     "splash": {
@@ -15,17 +15,19 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "to.holepunch.bare.expo"
+      "bundleIdentifier": "to.caner.snapper.expo"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "to.holepunch.bare.expo"
+      "package": "to.caner.snapper.expo"
     },
     "plugins": [
-      ["expo-router"],
+      [
+        "expo-router"
+      ],
       [
         "expo-build-properties",
         {
