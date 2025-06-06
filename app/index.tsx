@@ -2,38 +2,80 @@ import React, { useState } from 'react'
 import {
   View,
   StatusBar,
+  StyleSheet,
 } from 'react-native'
-import CameraScreen from './components/CameraScreen'
-import ChatScreen from './components/ChatScreen'
-import StoriesScreen from './components/StoriesScreen'
+import EnhancedCameraScreen from './components/CameraScreen'
+import EnhancedChatScreen from './components/ChatScreen'
+import EnhancedStoriesScreen from './components/StoriesScreen'
 import BottomNavigation from './components/BottomNavigation'
-import CustomStatusBar from './components/StatusBar'
 import "./global.css"
 
 export default function App() {
   const [activeScreen, setActiveScreen] = useState<'stories' | 'camera' | 'chat'>('camera')
 
+  const handleScreenChange = (screen: 'stories' | 'camera' | 'chat') => {
+    setActiveScreen(screen)
+  }
+
+  const handleNavigateToCamera = () => {
+    setActiveScreen('camera')
+  }
+
+  const handleNavigateToChat = () => {
+    setActiveScreen('chat')
+  }
+
+  const handleNavigateToStories = () => {
+    setActiveScreen('stories')
+  }
+
   const renderScreen = () => {
     switch (activeScreen) {
       case 'stories':
-        return <StoriesScreen />
+        return (
+          <EnhancedStoriesScreen
+            onOpenCamera={handleNavigateToCamera}
+          />
+        )
       case 'camera':
-        return <CameraScreen />
+        return (
+          <EnhancedCameraScreen
+            onNavigateToChat={handleNavigateToChat}
+          />
+        )
       case 'chat':
-        return <ChatScreen />
+        return (
+          <EnhancedChatScreen
+            onOpenCamera={handleNavigateToCamera}
+          />
+        )
       default:
-        return <CameraScreen />
+        return (
+          <EnhancedCameraScreen
+            onNavigateToChat={handleNavigateToChat}
+          />
+        )
     }
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#000' }}>
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
       {/* <CustomStatusBar /> */}
+
       {renderScreen()}
+
       <BottomNavigation
         activeScreen={activeScreen}
-        onScreenChange={setActiveScreen}
+        onScreenChange={handleScreenChange}
       />
     </View>
   )
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#000',
+  },
+})

@@ -1,15 +1,15 @@
-import React from 'react'
+import React, { useState } from 'react'
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  Image,
 } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
 import { BlurView } from 'expo-blur'
+import ChatView from './ChatView'
 
 interface ChatItem {
   id: string
@@ -65,7 +65,37 @@ const mockChats: ChatItem[] = [
   },
 ]
 
-export default function ChatScreen() {
+interface ChatScreenProps {
+  onOpenCamera?: () => void
+}
+
+export default function ChatScreen({ onOpenCamera }: ChatScreenProps) {
+  const [selectedChat, setSelectedChat] = useState<ChatItem | null>(null)
+
+  const handleChatPress = (chat: ChatItem) => {
+    setSelectedChat(chat)
+  }
+
+  const handleBackFromChat = () => {
+    setSelectedChat(null)
+  }
+
+  const handleCameraFromChat = () => {
+    setSelectedChat(null)
+    onOpenCamera?.()
+  }
+
+  if (selectedChat) {
+    return (
+      <ChatView
+        contactName={selectedChat.name}
+        contactAvatar={selectedChat.avatar}
+        onBack={handleBackFromChat}
+        onCamera={handleCameraFromChat}
+      />
+    )
+  }
+
   return (
     <LinearGradient
       colors={['#667eea', '#764ba2', '#f093fb']}
@@ -75,16 +105,26 @@ export default function ChatScreen() {
         <BlurView intensity={20} tint="light" style={styles.headerBlur}>
           <View style={styles.headerContent}>
             <Text style={styles.headerTitle}>Chats</Text>
-            <TouchableOpacity style={styles.headerButton}>
-              <Ionicons name="search" size={24} color="white" />
-            </TouchableOpacity>
+            <View style={styles.headerActions}>
+              <TouchableOpacity style={styles.headerButton}>
+                <Ionicons name="search" size={24} color="white" />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.headerButton}>
+                <Ionicons name="add" size={24} color="white" />
+              </TouchableOpacity>
+            </View>
           </View>
         </BlurView>
       </View>
 
       <ScrollView style={styles.chatList} showsVerticalScrollIndicator={false}>
         {mockChats.map((chat) => (
-          <TouchableOpacity key={chat.id} style={styles.chatItem}>
+          <TouchableOpacity
+            key={chat.id}
+            style={styles.chatItem}
+            onPress={() => handleChatPress(chat)}
+            activeOpacity={0.8}
+          >
             <BlurView intensity={30} tint="light" style={styles.chatItemBlur}>
               <View style={styles.chatContent}>
                 <View style={styles.avatarContainer}>
@@ -111,20 +151,56 @@ export default function ChatScreen() {
                     )}
                   </View>
                 </View>
+
+                <Ionicons
+                  name="chevron-forward"
+                  size={16}
+                  color="rgba(255,255,255,0.5)"
+                />
               </View>
             </BlurView>
           </TouchableOpacity>
         ))}
-      </ScrollView>
 
-      <TouchableOpacity style={styles.fab}>
-        <LinearGradient
-          colors={['#FF6B6B', '#4ECDC4']}
-          style={styles.fabGradient}
-        >
-          <Ionicons name="add" size={28} color="white" />
-        </LinearGradient>
-      </TouchableOpacity>
+        {/* Quick Actions */}
+        <View style={styles.quickActions}>
+          <BlurView intensity={20} tint="light" style={styles.quickActionsBlur}>
+            <View style={styles.quickActionsContent}>
+              <Text style={styles.quickActionsTitle}>Quick Actions</Text>
+
+              <TouchableOpacity style={styles.quickActionItem}>
+                <LinearGradient
+                  colors={['#FF6B6B', '#4ECDC4']}
+                  style={styles.quickActionGradient}
+                >
+                  <Ionicons name="camera" size={20} color="white" />
+                </LinearGradient>
+                <Text style={styles.quickActionText}>Send Photo</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.quickActionItem}>
+                <LinearGradient
+                  colors={['#667eea', '#764ba2']}
+                  style={styles.quickActionGradient}
+                >
+                  <Ionicons name="people" size={20} color="white" />
+                </LinearGradient>
+                <Text style={styles.quickActionText}>Group Chat</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.quickActionItem}>
+                <LinearGradient
+                  colors={['#f093fb', '#f5576c']}
+                  style={styles.quickActionGradient}
+                >
+                  <Ionicons name="scan" size={20} color="white" />
+                </LinearGradient>
+                <Text style={styles.quickActionText}>Scan Code</Text>
+              </TouchableOpacity>
+            </View>
+          </BlurView>
+        </View>
+      </ScrollView>
     </LinearGradient>
   )
 }
@@ -153,6 +229,10 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: 'bold',
     color: 'white',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    gap: 10,
   },
   headerButton: {
     padding: 8,
@@ -245,26 +325,39 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
   },
-  fab: {
-    position: 'absolute',
-    bottom: 160,
-    right: 30,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+  quickActions: {
+    marginTop: 20,
+    marginBottom: 20,
   },
-  fabGradient: {
-    flex: 1,
+  quickActionsBlur: {
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  quickActionsContent: {
+    padding: 20,
+  },
+  quickActionsTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: 'white',
+    marginBottom: 15,
+  },
+  quickActionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  quickActionGradient: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 12,
+  },
+  quickActionText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '500',
   },
 })
