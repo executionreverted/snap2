@@ -27,7 +27,7 @@ export default function StatusBar() {
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    top: 50,
+    top: 0,
     left: 24,
     right: 24,
     flexDirection: 'row',
@@ -39,6 +39,9 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   rightSection: {
     flexDirection: 'row',
@@ -55,6 +58,9 @@ const styles = StyleSheet.create({
     borderRadius: 2,
     backgroundColor: 'white',
     marginRight: 2,
+    shadowColor: 'rgba(0, 0, 0, 0.3)',
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 1,
   },
   weakSignal: {
     backgroundColor: 'rgba(255, 255, 255, 0.5)',
@@ -63,5 +69,8 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 14,
     fontWeight: '500',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
 })

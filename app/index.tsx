@@ -28,8 +28,7 @@ export default function App() {
 
   return (
     <View style={{ flex: 1, backgroundColor: '#000' }}>
-      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
-      <CustomStatusBar />
+      {/* <CustomStatusBar /> */}
       {renderScreen()}
       <BottomNavigation
         activeScreen={activeScreen}

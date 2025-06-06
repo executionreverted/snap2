@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   topControls: {
-    paddingTop: 60,
+    paddingTop: 45,
     paddingHorizontal: 20,
   },
   topBlur: {
@@ -214,13 +214,14 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   bottomControls: {
-    paddingBottom: 120,
+    paddingBottom: 160,
     paddingHorizontal: 20,
   },
   captureContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingHorizontal: 10,
   },
   galleryButton: {
     width: 50,

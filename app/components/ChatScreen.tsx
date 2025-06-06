@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    paddingTop: 70,
+    paddingTop: 60,
     paddingHorizontal: 20,
     paddingBottom: 20,
   },
@@ -160,6 +160,7 @@ const styles = StyleSheet.create({
   chatList: {
     flex: 1,
     paddingHorizontal: 20,
+    paddingBottom: 160,
   },
   chatItem: {
     marginBottom: 12,
@@ -246,7 +247,7 @@ const styles = StyleSheet.create({
   },
   fab: {
     position: 'absolute',
-    bottom: 120,
+    bottom: 160,
     right: 30,
     width: 60,
     height: 60,
