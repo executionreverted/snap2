@@ -56,9 +56,11 @@ export default function PhotoEditor({ imageUri, onClose, onPost }: PhotoEditorPr
   const [showTextInput, setShowTextInput] = useState(false)
   const [selectedRecipients, setSelectedRecipients] = useState<string[]>([])
   const [selectedSticker, setSelectedSticker] = useState<string | null>(null)
+  const [bottomSheetExpanded, setBottomSheetExpanded] = useState(true)
 
   const slideAnim = useRef(new Animated.Value(screenHeight)).current
   const fadeAnim = useRef(new Animated.Value(0)).current
+  const bottomSheetAnim = useRef(new Animated.Value(1)).current
 
   useEffect(() => {
     Animated.parallel([
@@ -75,6 +77,14 @@ export default function PhotoEditor({ imageUri, onClose, onPost }: PhotoEditorPr
     ]).start()
   }, [])
 
+  useEffect(() => {
+    Animated.timing(bottomSheetAnim, {
+      toValue: bottomSheetExpanded ? 1 : 0,
+      duration: 300,
+      useNativeDriver: false,
+    }).start()
+  }, [bottomSheetExpanded])
+
   const closeEditor = () => {
     Animated.parallel([
       Animated.timing(slideAnim, {
@@ -88,6 +98,10 @@ export default function PhotoEditor({ imageUri, onClose, onPost }: PhotoEditorPr
         useNativeDriver: true,
       })
     ]).start(() => onClose())
+  }
+
+  const toggleBottomSheet = () => {
+    setBottomSheetExpanded(!bottomSheetExpanded)
   }
 
   const addSticker = (content: string, type: 'emoji' | 'text' = 'emoji') => {
@@ -281,7 +295,17 @@ export default function PhotoEditor({ imageUri, onClose, onPost }: PhotoEditorPr
         </BlurView>
 
         {/* Photo Preview */}
-        <View style={styles.photoContainer}>
+        <Animated.View
+          style={[
+            styles.photoContainer,
+            {
+              flex: bottomSheetAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [1, 0.6],
+              }),
+            }
+          ]}
+        >
           <View style={styles.photoPreview}>
             <Text style={styles.photoPlaceholder}>📸</Text>
             <Text style={styles.photoText}>Photo Preview</Text>
@@ -310,68 +334,104 @@ export default function PhotoEditor({ imageUri, onClose, onPost }: PhotoEditorPr
               </Animated.View>
             ))}
           </View>
-        </View>
+        </Animated.View>
 
-        {/* Bottom Tabs */}
-        <BlurView intensity={40} tint="dark" style={styles.tabsContainer}>
-          <View style={styles.tabs}>
-            <TouchableOpacity
-              style={[styles.tab, activeTab === 'stickers' && styles.activeTab]}
-              onPress={() => setActiveTab('stickers')}
-            >
-              <Ionicons
-                name="happy"
-                size={20}
-                color={activeTab === 'stickers' ? '#4ECDC4' : 'rgba(255,255,255,0.6)'}
-              />
-              <Text style={[
-                styles.tabText,
-                activeTab === 'stickers' && styles.activeTabText
-              ]}>
-                Stickers
-              </Text>
-            </TouchableOpacity>
+        {/* Collapse/Expand Button */}
+        <TouchableOpacity
+          style={styles.toggleButton}
+          onPress={toggleBottomSheet}
+        >
+          <BlurView intensity={40} tint="dark" style={styles.toggleButtonBlur}>
+            <Ionicons
+              name={bottomSheetExpanded ? "chevron-down" : "chevron-up"}
+              size={20}
+              color="white"
+            />
+          </BlurView>
+        </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[styles.tab, activeTab === 'text' && styles.activeTab]}
-              onPress={() => setActiveTab('text')}
-            >
-              <Ionicons
-                name="text"
-                size={20}
-                color={activeTab === 'text' ? '#4ECDC4' : 'rgba(255,255,255,0.6)'}
-              />
-              <Text style={[
-                styles.tabText,
-                activeTab === 'text' && styles.activeTabText
-              ]}>
-                Text
-              </Text>
-            </TouchableOpacity>
+        {/* Bottom Tabs Container */}
+        <Animated.View
+          style={[
+            styles.tabsContainer,
+            {
+              height: bottomSheetAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [60, 280],
+              }),
+            }
+          ]}
+        >
+          <BlurView intensity={40} tint="dark" style={styles.tabsBlur}>
+            {/* Bottom Tabs */}
+            <View style={styles.tabs}>
+              <TouchableOpacity
+                style={[styles.tab, activeTab === 'stickers' && styles.activeTab]}
+                onPress={() => setActiveTab('stickers')}
+              >
+                <Ionicons
+                  name="happy"
+                  size={20}
+                  color={activeTab === 'stickers' ? '#4ECDC4' : 'rgba(255,255,255,0.6)'}
+                />
+                <Text style={[
+                  styles.tabText,
+                  activeTab === 'stickers' && styles.activeTabText
+                ]}>
+                  Stickers
+                </Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[styles.tab, activeTab === 'send' && styles.activeTab]}
-              onPress={() => setActiveTab('send')}
-            >
-              <Ionicons
-                name="send"
-                size={20}
-                color={activeTab === 'send' ? '#4ECDC4' : 'rgba(255,255,255,0.6)'}
-              />
-              <Text style={[
-                styles.tabText,
-                activeTab === 'send' && styles.activeTabText
-              ]}>
-                Send
-              </Text>
-            </TouchableOpacity>
-          </View>
+              <TouchableOpacity
+                style={[styles.tab, activeTab === 'text' && styles.activeTab]}
+                onPress={() => setActiveTab('text')}
+              >
+                <Ionicons
+                  name="text"
+                  size={20}
+                  color={activeTab === 'text' ? '#4ECDC4' : 'rgba(255,255,255,0.6)'}
+                />
+                <Text style={[
+                  styles.tabText,
+                  activeTab === 'text' && styles.activeTabText
+                ]}>
+                  Text
+                </Text>
+              </TouchableOpacity>
 
-          {/* Bottom Sheet Content */}
-          <View style={styles.bottomSheet}>
-            {renderBottomSheet()}
-          </View>
-        </BlurView>
+              <TouchableOpacity
+                style={[styles.tab, activeTab === 'send' && styles.activeTab]}
+                onPress={() => setActiveTab('send')}
+              >
+                <Ionicons
+                  name="send"
+                  size={20}
+                  color={activeTab === 'send' ? '#4ECDC4' : 'rgba(255,255,255,0.6)'}
+                />
+                <Text style={[
+                  styles.tabText,
+                  activeTab === 'send' && styles.activeTabText
+                ]}>
+                  Send
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Bottom Sheet Content */}
+            {bottomSheetExpanded && (
+              <Animated.View
+                style={[
+                  styles.bottomSheet,
+                  {
+                    opacity: bottomSheetAnim,
+                  }
+                ]}
+              >
+                {renderBottomSheet()}
+              </Animated.View>
+            )}
+          </BlurView>
+        </Animated.View>
       </LinearGradient>
     </Animated.View>
   )
@@ -405,13 +465,12 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   photoContainer: {
-    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
   },
   photoPreview: {
-    width: '90%',
+    width: '100%',
     aspectRatio: 0.75,
     backgroundColor: 'rgba(255,255,255,0.1)',
     borderRadius: 20,
@@ -446,8 +505,21 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
   },
+  toggleButton: {
+    alignSelf: 'center',
+    marginBottom: 10,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  toggleButtonBlur: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
   tabsContainer: {
     paddingBottom: 40,
+  },
+  tabsBlur: {
+    flex: 1,
   },
   tabs: {
     flexDirection: 'row',

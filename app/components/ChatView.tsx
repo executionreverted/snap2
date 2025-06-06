@@ -34,6 +34,52 @@ interface ChatViewProps {
   onCamera: () => void
 }
 
+interface AttachmentOption {
+  id: string
+  title: string
+  icon: string
+  color: string[]
+}
+
+const attachmentOptions: AttachmentOption[] = [
+  {
+    id: 'camera',
+    title: 'Camera',
+    icon: 'camera',
+    color: ['#FF6B6B', '#4ECDC4']
+  },
+  {
+    id: 'gallery',
+    title: 'Gallery',
+    icon: 'images',
+    color: ['#667eea', '#764ba2']
+  },
+  {
+    id: 'location',
+    title: 'Location',
+    icon: 'location',
+    color: ['#4facfe', '#00f2fe']
+  },
+  {
+    id: 'voice',
+    title: 'Voice Note',
+    icon: 'mic',
+    color: ['#f093fb', '#f5576c']
+  },
+  {
+    id: 'document',
+    title: 'Document',
+    icon: 'document-text',
+    color: ['#a8edea', '#fed6e3']
+  },
+  {
+    id: 'contact',
+    title: 'Contact',
+    icon: 'person',
+    color: ['#ffecd2', '#fcb69f']
+  }
+]
+
 const mockMessages: Message[] = [
   {
     id: '1',
@@ -81,9 +127,11 @@ export default function ChatView({ contactName, contactAvatar, onBack, onCamera 
   const [message, setMessage] = useState('')
   const [messages, setMessages] = useState(mockMessages)
   const [isTyping, setIsTyping] = useState(false)
+  const [showAttachmentMenu, setShowAttachmentMenu] = useState(false)
   const scrollViewRef = useRef<ScrollView>(null)
   const slideAnim = useRef(new Animated.Value(screenWidth)).current
   const fadeAnim = useRef(new Animated.Value(0)).current
+  const attachmentMenuAnim = useRef(new Animated.Value(0)).current
 
   useEffect(() => {
     // Slide in animation
@@ -100,6 +148,15 @@ export default function ChatView({ contactName, contactAvatar, onBack, onCamera 
       }),
     ]).start()
   }, [])
+
+  useEffect(() => {
+    // Attachment menu animation
+    Animated.timing(attachmentMenuAnim, {
+      toValue: showAttachmentMenu ? 1 : 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start()
+  }, [showAttachmentMenu])
 
   const sendMessage = () => {
     if (message.trim()) {
@@ -129,6 +186,35 @@ export default function ChatView({ contactName, contactAvatar, onBack, onCamera 
         }
         setMessages(prev => [...prev, response])
       }, 3000)
+    }
+  }
+
+  const handleAttachmentPress = () => {
+    setShowAttachmentMenu(!showAttachmentMenu)
+  }
+
+  const handleAttachmentOption = (option: AttachmentOption) => {
+    setShowAttachmentMenu(false)
+
+    switch (option.id) {
+      case 'camera':
+        onCamera()
+        break
+      case 'gallery':
+        console.log('Open gallery')
+        break
+      case 'location':
+        console.log('Share location')
+        break
+      case 'voice':
+        console.log('Record voice note')
+        break
+      case 'document':
+        console.log('Share document')
+        break
+      case 'contact':
+        console.log('Share contact')
+        break
     }
   }
 
@@ -172,6 +258,53 @@ export default function ChatView({ contactName, contactAvatar, onBack, onCamera 
         )}
       </View>
     </View>
+  )
+
+  const renderAttachmentMenu = () => (
+    <Animated.View
+      style={[
+        styles.attachmentMenu,
+        {
+          opacity: attachmentMenuAnim,
+          transform: [
+            {
+              translateY: attachmentMenuAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [100, 0],
+              }),
+            },
+            {
+              scale: attachmentMenuAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [0.9, 1],
+              }),
+            },
+          ],
+        },
+      ]}
+      pointerEvents={showAttachmentMenu ? 'auto' : 'none'}
+    >
+      <BlurView intensity={40} tint="light" style={styles.attachmentMenuBlur}>
+        <View style={styles.attachmentMenuContent}>
+          {attachmentOptions.map((option, index) => (
+            <TouchableOpacity
+              key={option.id}
+              style={styles.attachmentOption}
+              onPress={() => handleAttachmentOption(option)}
+              activeOpacity={0.8}
+            >
+              <LinearGradient
+                colors={option.color}
+                style={styles.attachmentOptionGradient}
+              >
+                <Ionicons name={option.icon as any} size={24} color="white" />
+              </LinearGradient>
+              <Text style={styles.attachmentOptionText}>{option.title}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </BlurView>
+    </Animated.View>
   )
 
   return (
@@ -237,6 +370,9 @@ export default function ChatView({ contactName, contactAvatar, onBack, onCamera 
             )}
           </ScrollView>
 
+          {/* Attachment Menu */}
+          {renderAttachmentMenu()}
+
           {/* Input Area */}
           <BlurView intensity={40} tint="light" style={styles.inputContainer}>
             <TouchableOpacity onPress={onCamera} style={styles.cameraButton}>
@@ -259,8 +395,24 @@ export default function ChatView({ contactName, contactAvatar, onBack, onCamera 
                 maxLength={1000}
               />
 
-              <TouchableOpacity style={styles.attachButton}>
-                <Ionicons name="add" size={20} color="rgba(255,255,255,0.7)" />
+              <TouchableOpacity
+                style={styles.attachButton}
+                onPress={handleAttachmentPress}
+              >
+                <Animated.View
+                  style={{
+                    transform: [
+                      {
+                        rotate: attachmentMenuAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: ['0deg', '45deg'],
+                        }),
+                      },
+                    ],
+                  }}
+                >
+                  <Ionicons name="add" size={20} color="rgba(255,255,255,0.7)" />
+                </Animated.View>
               </TouchableOpacity>
             </View>
 
@@ -411,6 +563,49 @@ const styles = StyleSheet.create({
     height: 6,
     borderRadius: 3,
     backgroundColor: 'rgba(255,255,255,0.7)',
+  },
+  attachmentMenu: {
+    position: 'absolute',
+    bottom: 120,
+    left: 20,
+    right: 20,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  attachmentMenuBlur: {
+    overflow: 'hidden',
+  },
+  attachmentMenuContent: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    padding: 20,
+    gap: 15,
+  },
+  attachmentOption: {
+    alignItems: 'center',
+    width: '30%',
+  },
+  attachmentOptionGradient: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  attachmentOptionText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '500',
+    textAlign: 'center',
   },
   inputContainer: {
     flexDirection: 'row',

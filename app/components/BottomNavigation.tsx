@@ -8,6 +8,7 @@ import {
 import { Ionicons } from '@expo/vector-icons'
 import { BlurView } from 'expo-blur'
 import { LinearGradient } from 'expo-linear-gradient'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 const { width: screenWidth } = Dimensions.get('window')
 
@@ -17,6 +18,8 @@ interface BottomNavigationProps {
 }
 
 export default function BottomNavigation({ activeScreen, onScreenChange }: BottomNavigationProps) {
+  const insets = useSafeAreaInsets()
+
   const getIconColor = (screen: string) => {
     return activeScreen === screen ? 'white' : 'rgba(255, 255, 255, 0.6)'
   }
@@ -26,7 +29,7 @@ export default function BottomNavigation({ activeScreen, onScreenChange }: Botto
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingBottom: Math.max(insets.bottom, 20) }]}>
       <BlurView intensity={80} tint="dark" style={styles.navigationContainer}>
         <LinearGradient
           colors={['rgba(255, 255, 255, 0.1)', 'rgba(255, 255, 255, 0.05)']}
@@ -82,10 +85,11 @@ export default function BottomNavigation({ activeScreen, onScreenChange }: Botto
   )
 }
 
+
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    bottom: 40,
+    bottom: -10,
     left: 20,
     right: 20,
     borderRadius: 25,

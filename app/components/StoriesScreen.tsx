@@ -59,25 +59,16 @@ const mockStories: Story[] = [
     isYours: false
   },
   {
+    id: '8',
+    username: 'sarah_j',
+    avatar: '👩‍🦱',
+    content: '🏖️',
+    timestamp: new Date(Date.now() - 1800000),
+    isViewed: false,
+    isYours: false
+  },
+  {
     id: '2',
-    username: 'sarah_j',
-    avatar: '👩‍🦱',
-    content: '🌅',
-    timestamp: new Date(Date.now() - 1700000),
-    isViewed: false,
-    isYours: false
-  },
-  {
-    id: '3',
-    username: 'sarah_j',
-    avatar: '👩‍🦱',
-    content: '🍹',
-    timestamp: new Date(Date.now() - 1600000),
-    isViewed: false,
-    isYours: false
-  },
-  {
-    id: '4',
     username: 'mike_dev',
     avatar: '👨‍💻',
     content: '☕',
@@ -86,16 +77,7 @@ const mockStories: Story[] = [
     isYours: false
   },
   {
-    id: '5',
-    username: 'mike_dev',
-    avatar: '👨‍💻',
-    content: '💻',
-    timestamp: new Date(Date.now() - 7100000),
-    isViewed: true,
-    isYours: false
-  },
-  {
-    id: '6',
+    id: '3',
     username: 'emma_art',
     avatar: '👩‍🎨',
     content: '🎨',
@@ -104,7 +86,7 @@ const mockStories: Story[] = [
     isYours: false
   },
   {
-    id: '7',
+    id: '4',
     username: 'alex_space',
     avatar: '👨‍🚀',
     content: '🚀',
@@ -113,7 +95,7 @@ const mockStories: Story[] = [
     isYours: false
   },
   {
-    id: '8',
+    id: '5',
     username: 'luna_music',
     avatar: '👩‍🎤',
     content: '🎵',
@@ -140,13 +122,11 @@ export default function StoriesScreen({ onOpenCamera }: StoriesScreenProps) {
   const [selectedUserStories, setSelectedUserStories] = useState<UserStories | null>(null)
   const [showStoryViewer, setShowStoryViewer] = useState(false)
 
-  // Group stories by user
+  // Group stories by user - create unique user groups
   const groupedStories = React.useMemo(() => {
     const groups: { [key: string]: UserStories } = {}
 
     mockStories.forEach(story => {
-      if (story.isYours) return // Skip "Your Story" for viewer
-
       if (!groups[story.username]) {
         groups[story.username] = {
           username: story.username,
@@ -170,18 +150,22 @@ export default function StoriesScreen({ onOpenCamera }: StoriesScreenProps) {
     return Object.values(groups)
   }, [])
 
-  const handleStoryPress = (story: Story, index: number) => {
-    if (story.isYours) {
-      onOpenCamera?.()
+  const handleStoryPress = (userStories: UserStories) => {
+    // Check if it's "Your Story"
+    if (userStories.username === 'Your Story') {
+      // If user has stories, view them; otherwise open camera
+      if (userStories.stories.length > 0) {
+        setSelectedUserStories(userStories)
+        setShowStoryViewer(true)
+      } else {
+        onOpenCamera?.()
+      }
       return
     }
 
-    // Find the user's story group
-    const userStories = groupedStories.find(group => group.username === story.username)
-    if (userStories) {
-      setSelectedUserStories(userStories)
-      setShowStoryViewer(true)
-    }
+    // For other users' stories
+    setSelectedUserStories(userStories)
+    setShowStoryViewer(true)
   }
 
   const handleCloseStoryViewer = () => {
@@ -194,36 +178,41 @@ export default function StoriesScreen({ onOpenCamera }: StoriesScreenProps) {
     // Handle reply logic here
   }
 
-  const renderStoryItem = (story: Story, index: number) => (
-    <TouchableOpacity
-      key={story.id}
-      style={styles.storyItem}
-      onPress={() => handleStoryPress(story, index)}
-      activeOpacity={0.8}
-    >
-      <LinearGradient
-        colors={story.isYours
-          ? ['#FF6B6B', '#4ECDC4']
-          : story.isViewed
-            ? ['rgba(255,255,255,0.3)', 'rgba(255,255,255,0.1)']
-            : ['#f093fb', '#f5576c', '#4facfe']
-        }
-        style={styles.storyGradient}
+  const renderUserStoryItem = (userStories: UserStories, index: number) => {
+    const isYours = userStories.username === 'Your Story'
+    const hasStories = userStories.stories.length > 0
+
+    return (
+      <TouchableOpacity
+        key={userStories.username}
+        style={styles.storyItem}
+        onPress={() => handleStoryPress(userStories)}
+        activeOpacity={0.8}
       >
-        <View style={[styles.storyAvatar, story.isViewed && !story.isYours && styles.viewedStory]}>
-          <Text style={styles.storyEmoji}>{story.avatar}</Text>
-          {story.isYours && (
-            <View style={styles.addButton}>
-              <Ionicons name="add" size={16} color="white" />
-            </View>
-          )}
-        </View>
-      </LinearGradient>
-      <Text style={styles.storyUsername} numberOfLines={1}>
-        {story.username}
-      </Text>
-    </TouchableOpacity>
-  )
+        <LinearGradient
+          colors={isYours
+            ? ['#FF6B6B', '#4ECDC4']
+            : userStories.hasUnviewed
+              ? ['#f093fb', '#f5576c', '#4facfe']
+              : ['rgba(255,255,255,0.3)', 'rgba(255,255,255,0.1)']
+          }
+          style={styles.storyGradient}
+        >
+          <View style={[styles.storyAvatar, !userStories.hasUnviewed && !isYours && styles.viewedStory]}>
+            <Text style={styles.storyEmoji}>{userStories.avatar}</Text>
+            {isYours && !hasStories && (
+              <View style={styles.addButton}>
+                <Ionicons name="add" size={16} color="white" />
+              </View>
+            )}
+          </View>
+        </LinearGradient>
+        <Text style={styles.storyUsername} numberOfLines={1}>
+          {userStories.username}
+        </Text>
+      </TouchableOpacity>
+    )
+  }
 
   const renderDiscoverItem = (item: Discover) => (
     <TouchableOpacity key={item.id} style={styles.discoverItem} activeOpacity={0.8}>
@@ -251,7 +240,7 @@ export default function StoriesScreen({ onOpenCamera }: StoriesScreenProps) {
     return (
       <StoryViewer
         userStories={selectedUserStories}
-        allUserStories={groupedStories}
+        allUserStories={groupedStories.filter(user => user.username !== 'Your Story')}
         onClose={handleCloseStoryViewer}
         onReply={handleReplyToStory}
       />
@@ -286,7 +275,7 @@ export default function StoriesScreen({ onOpenCamera }: StoriesScreenProps) {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.storiesContainer}
           >
-            {mockStories.map(renderStoryItem)}
+            {groupedStories.map(renderUserStoryItem)}
           </ScrollView>
         </View>
 
@@ -345,7 +334,7 @@ const styles = StyleSheet.create({
     paddingBottom: 140, // Added proper bottom padding for nav
   },
   header: {
-    paddingTop: 20,
+    paddingTop: 60,
     paddingHorizontal: 20,
     paddingBottom: 20,
   },
