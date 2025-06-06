@@ -25,48 +25,30 @@ interface Story {
   isViewed: boolean
 }
 
-interface StoryViewerProps {
+interface UserStories {
+  username: string
+  avatar: string
   stories: Story[]
-  initialIndex: number
+  hasUnviewed: boolean
+}
+
+interface StoryViewerProps {
+  userStories: UserStories
+  allUserStories: UserStories[]
   onClose: () => void
   onReply: (storyId: string, message: string) => void
 }
 
-const mockStories: Story[] = [
-  {
-    id: '1',
-    username: 'sarah_j',
-    avatar: '👩‍🦱',
-    content: '🌅',
-    timestamp: new Date(Date.now() - 1800000),
-    isViewed: false
-  },
-  {
-    id: '2',
-    username: 'sarah_j',
-    avatar: '👩‍🦱',
-    content: '🏖️',
-    timestamp: new Date(Date.now() - 900000),
-    isViewed: false
-  },
-  {
-    id: '3',
-    username: 'sarah_j',
-    avatar: '👩‍🦱',
-    content: '🍹',
-    timestamp: new Date(Date.now() - 300000),
-    isViewed: false
-  }
-]
-
 export default function StoryViewer({
-  stories = mockStories,
-  initialIndex = 0,
+  userStories,
+  allUserStories,
   onClose,
   onReply
 }: StoryViewerProps) {
-  const [currentIndex, setCurrentIndex] = useState(initialIndex)
-  const [progress, setProgress] = useState(0)
+  const [currentUserIndex, setCurrentUserIndex] = useState(() =>
+    allUserStories.findIndex(user => user.username === userStories.username)
+  )
+  const [currentStoryIndex, setCurrentStoryIndex] = useState(0)
   const [isPaused, setIsPaused] = useState(false)
   const [showReplyInput, setShowReplyInput] = useState(false)
   const [replyMessage, setReplyMessage] = useState('')
@@ -77,6 +59,8 @@ export default function StoryViewer({
   const scaleAnim = useRef(new Animated.Value(1.1)).current
 
   const storyDuration = 5000 // 5 seconds per story
+  const currentUser = allUserStories[currentUserIndex]
+  const currentStory = currentUser?.stories[currentStoryIndex]
 
   useEffect(() => {
     // Entrance animation
@@ -97,13 +81,13 @@ export default function StoryViewer({
   }, [])
 
   useEffect(() => {
-    if (currentIndex < stories.length) {
+    if (currentUser && currentStory) {
       startStoryProgress()
     }
-  }, [currentIndex])
+  }, [currentUserIndex, currentStoryIndex])
 
   const startStoryProgress = () => {
-    if (isPaused) return
+    if (isPaused || !currentStory) return
 
     progressAnim.setValue(0)
     Animated.timing(progressAnim, {
@@ -124,11 +108,10 @@ export default function StoryViewer({
 
   const resumeStory = () => {
     setIsPaused(false)
-    const currentProgress = progress
 
     Animated.timing(progressAnim, {
       toValue: 1,
-      duration: (1 - currentProgress) * storyDuration,
+      duration: storyDuration * 0.8, // Resume with some time left
       useNativeDriver: false,
     }).start(({ finished }) => {
       if (finished && !isPaused) {
@@ -138,27 +121,31 @@ export default function StoryViewer({
   }
 
   const nextStory = () => {
-    if (currentIndex < stories.length - 1) {
-      setCurrentIndex(currentIndex + 1)
-      Animated.timing(slideAnim, {
-        toValue: -(currentIndex + 1) * screenWidth,
-        duration: 300,
-        useNativeDriver: true,
-      }).start()
+    if (currentStoryIndex < currentUser.stories.length - 1) {
+      // Next story in current user's stories
+      setCurrentStoryIndex(currentStoryIndex + 1)
+    } else if (currentUserIndex < allUserStories.length - 1) {
+      // Move to next user's first story
+      setCurrentUserIndex(currentUserIndex + 1)
+      setCurrentStoryIndex(0)
     } else {
+      // No more stories, close viewer
       closeViewer()
     }
   }
 
   const prevStory = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1)
-      Animated.timing(slideAnim, {
-        toValue: -(currentIndex - 1) * screenWidth,
-        duration: 300,
-        useNativeDriver: true,
-      }).start()
+    if (currentStoryIndex > 0) {
+      // Previous story in current user's stories
+      setCurrentStoryIndex(currentStoryIndex - 1)
+    } else if (currentUserIndex > 0) {
+      // Move to previous user's last story
+      const prevUserIndex = currentUserIndex - 1
+      const prevUser = allUserStories[prevUserIndex]
+      setCurrentUserIndex(prevUserIndex)
+      setCurrentStoryIndex(prevUser.stories.length - 1)
     }
+    // If at first story of first user, do nothing
   }
 
   const closeViewer = () => {
@@ -177,8 +164,8 @@ export default function StoryViewer({
   }
 
   const handleReply = () => {
-    if (replyMessage.trim()) {
-      onReply(stories[currentIndex].id, replyMessage)
+    if (replyMessage.trim() && currentStory) {
+      onReply(currentStory.id, replyMessage)
       setReplyMessage('')
       setShowReplyInput(false)
     }
@@ -196,7 +183,9 @@ export default function StoryViewer({
     return `${hours}h`
   }
 
-  const currentStory = stories[currentIndex]
+  if (!currentUser || !currentStory) {
+    return null
+  }
 
   return (
     <Animated.View
@@ -214,18 +203,18 @@ export default function StoryViewer({
       >
         {/* Progress Bars */}
         <View style={styles.progressContainer}>
-          {stories.map((_, index) => (
+          {currentUser.stories.map((_, index) => (
             <View key={index} style={styles.progressBarBackground}>
               <Animated.View
                 style={[
                   styles.progressBar,
                   {
-                    width: index === currentIndex
+                    width: index === currentStoryIndex
                       ? progressAnim.interpolate({
                         inputRange: [0, 1],
                         outputRange: ['0%', '100%']
                       })
-                      : index < currentIndex ? '100%' : '0%'
+                      : index < currentStoryIndex ? '100%' : '0%'
                   }
                 ]}
               />
@@ -236,9 +225,9 @@ export default function StoryViewer({
         {/* Header */}
         <BlurView intensity={20} tint="dark" style={styles.header}>
           <View style={styles.userInfo}>
-            <Text style={styles.avatar}>{currentStory.avatar}</Text>
+            <Text style={styles.avatar}>{currentUser.avatar}</Text>
             <View>
-              <Text style={styles.username}>{currentStory.username}</Text>
+              <Text style={styles.username}>{currentUser.username}</Text>
               <Text style={styles.timestamp}>
                 {formatTime(currentStory.timestamp)}
               </Text>
@@ -246,6 +235,14 @@ export default function StoryViewer({
           </View>
 
           <View style={styles.headerActions}>
+            {/* User indicator if multiple users */}
+            {allUserStories.length > 1 && (
+              <View style={styles.userIndicator}>
+                <Text style={styles.userIndicatorText}>
+                  {currentUserIndex + 1}/{allUserStories.length}
+                </Text>
+              </View>
+            )}
             <TouchableOpacity style={styles.headerButton}>
               <Ionicons name="ellipsis-horizontal" size={20} color="white" />
             </TouchableOpacity>
@@ -257,39 +254,28 @@ export default function StoryViewer({
 
         {/* Story Content */}
         <View style={styles.contentContainer}>
-          <Animated.View
-            style={[
-              styles.storiesSlider,
-              { transform: [{ translateX: slideAnim }] }
-            ]}
+          <TouchableOpacity
+            style={styles.storyContent}
+            onPressIn={pauseStory}
+            onPressOut={resumeStory}
+            activeOpacity={1}
           >
-            {stories.map((story, index) => (
-              <View key={story.id} style={styles.storySlide}>
-                <TouchableOpacity
-                  style={styles.storyContent}
-                  onPressIn={pauseStory}
-                  onPressOut={resumeStory}
-                  activeOpacity={1}
-                >
-                  <View style={styles.contentCenter}>
-                    <Text style={styles.storyEmoji}>{story.content}</Text>
-                  </View>
+            <View style={styles.contentCenter}>
+              <Text style={styles.storyEmoji}>{currentStory.content}</Text>
+            </View>
 
-                  {/* Tap areas for navigation */}
-                  <TouchableOpacity
-                    style={styles.prevArea}
-                    onPress={prevStory}
-                    activeOpacity={1}
-                  />
-                  <TouchableOpacity
-                    style={styles.nextArea}
-                    onPress={nextStory}
-                    activeOpacity={1}
-                  />
-                </TouchableOpacity>
-              </View>
-            ))}
-          </Animated.View>
+            {/* Tap areas for navigation */}
+            <TouchableOpacity
+              style={styles.prevArea}
+              onPress={prevStory}
+              activeOpacity={1}
+            />
+            <TouchableOpacity
+              style={styles.nextArea}
+              onPress={nextStory}
+              activeOpacity={1}
+            />
+          </TouchableOpacity>
         </View>
 
         {/* Bottom Actions */}
@@ -302,7 +288,7 @@ export default function StoryViewer({
               <View style={styles.replyInputContainer}>
                 <TextInput
                   style={styles.replyInput}
-                  placeholder={`Reply to ${currentStory.username}...`}
+                  placeholder={`Reply to ${currentUser.username}...`}
                   placeholderTextColor="rgba(255,255,255,0.6)"
                   value={replyMessage}
                   onChangeText={setReplyMessage}
@@ -382,6 +368,7 @@ const styles = StyleSheet.create({
   userInfo: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
   },
   avatar: {
     fontSize: 18,
@@ -404,22 +391,25 @@ const styles = StyleSheet.create({
   },
   headerActions: {
     flexDirection: 'row',
+    alignItems: 'center',
     gap: 10,
+  },
+  userIndicator: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 10,
+  },
+  userIndicatorText: {
+    color: 'white',
+    fontSize: 11,
+    fontWeight: '600',
   },
   headerButton: {
     padding: 8,
   },
   contentContainer: {
     flex: 1,
-    overflow: 'hidden',
-  },
-  storiesSlider: {
-    flexDirection: 'row',
-    height: '100%',
-  },
-  storySlide: {
-    width: screenWidth,
-    height: '100%',
   },
   storyContent: {
     flex: 1,

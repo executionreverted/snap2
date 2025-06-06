@@ -117,7 +117,11 @@ export default function ChatScreen({ onOpenCamera }: ChatScreenProps) {
         </BlurView>
       </View>
 
-      <ScrollView style={styles.chatList} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.chatList}
+        contentContainerStyle={styles.chatListContent}
+        showsVerticalScrollIndicator={false}
+      >
         {mockChats.map((chat) => (
           <TouchableOpacity
             key={chat.id}
@@ -168,34 +172,108 @@ export default function ChatScreen({ onOpenCamera }: ChatScreenProps) {
             <View style={styles.quickActionsContent}>
               <Text style={styles.quickActionsTitle}>Quick Actions</Text>
 
-              <TouchableOpacity style={styles.quickActionItem}>
-                <LinearGradient
-                  colors={['#FF6B6B', '#4ECDC4']}
-                  style={styles.quickActionGradient}
+              <View style={styles.quickActionsGrid}>
+                <TouchableOpacity
+                  style={styles.quickActionItem}
+                  onPress={onOpenCamera}
                 >
-                  <Ionicons name="camera" size={20} color="white" />
-                </LinearGradient>
-                <Text style={styles.quickActionText}>Send Photo</Text>
+                  <LinearGradient
+                    colors={['#FF6B6B', '#4ECDC4']}
+                    style={styles.quickActionGradient}
+                  >
+                    <Ionicons name="camera" size={20} color="white" />
+                  </LinearGradient>
+                  <Text style={styles.quickActionText}>Send Photo</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.quickActionItem}>
+                  <LinearGradient
+                    colors={['#667eea', '#764ba2']}
+                    style={styles.quickActionGradient}
+                  >
+                    <Ionicons name="people" size={20} color="white" />
+                  </LinearGradient>
+                  <Text style={styles.quickActionText}>Group Chat</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.quickActionItem}>
+                  <LinearGradient
+                    colors={['#f093fb', '#f5576c']}
+                    style={styles.quickActionGradient}
+                  >
+                    <Ionicons name="scan" size={20} color="white" />
+                  </LinearGradient>
+                  <Text style={styles.quickActionText}>Scan Code</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.quickActionItem}>
+                  <LinearGradient
+                    colors={['#4facfe', '#00f2fe']}
+                    style={styles.quickActionGradient}
+                  >
+                    <Ionicons name="location" size={20} color="white" />
+                  </LinearGradient>
+                  <Text style={styles.quickActionText}>Share Location</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.quickActionItem}>
+                  <LinearGradient
+                    colors={['#a8edea', '#fed6e3']}
+                    style={styles.quickActionGradient}
+                  >
+                    <Ionicons name="gift" size={20} color="white" />
+                  </LinearGradient>
+                  <Text style={styles.quickActionText}>Send Gift</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.quickActionItem}>
+                  <LinearGradient
+                    colors={['#ffecd2', '#fcb69f']}
+                    style={styles.quickActionGradient}
+                  >
+                    <Ionicons name="musical-notes" size={20} color="white" />
+                  </LinearGradient>
+                  <Text style={styles.quickActionText}>Voice Note</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </BlurView>
+        </View>
+
+        {/* Recent Activity */}
+        <View style={styles.activitySection}>
+          <BlurView intensity={20} tint="light" style={styles.activityBlur}>
+            <View style={styles.activityContent}>
+              <Text style={styles.activityTitle}>Recent Activity</Text>
+
+              <TouchableOpacity style={styles.activityItem}>
+                <View style={styles.activityIcon}>
+                  <Ionicons name="camera" size={16} color="#4ECDC4" />
+                </View>
+                <View style={styles.activityInfo}>
+                  <Text style={styles.activityText}>Posted to My Story</Text>
+                  <Text style={styles.activityTime}>2 hours ago</Text>
+                </View>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.quickActionItem}>
-                <LinearGradient
-                  colors={['#667eea', '#764ba2']}
-                  style={styles.quickActionGradient}
-                >
-                  <Ionicons name="people" size={20} color="white" />
-                </LinearGradient>
-                <Text style={styles.quickActionText}>Group Chat</Text>
+              <TouchableOpacity style={styles.activityItem}>
+                <View style={styles.activityIcon}>
+                  <Ionicons name="heart" size={16} color="#FF6B6B" />
+                </View>
+                <View style={styles.activityInfo}>
+                  <Text style={styles.activityText}>3 people viewed your story</Text>
+                  <Text style={styles.activityTime}>4 hours ago</Text>
+                </View>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.quickActionItem}>
-                <LinearGradient
-                  colors={['#f093fb', '#f5576c']}
-                  style={styles.quickActionGradient}
-                >
-                  <Ionicons name="scan" size={20} color="white" />
-                </LinearGradient>
-                <Text style={styles.quickActionText}>Scan Code</Text>
+              <TouchableOpacity style={styles.activityItem}>
+                <View style={styles.activityIcon}>
+                  <Ionicons name="people" size={16} color="#45B7D1" />
+                </View>
+                <View style={styles.activityInfo}>
+                  <Text style={styles.activityText}>Added to group chat</Text>
+                  <Text style={styles.activityTime}>1 day ago</Text>
+                </View>
               </TouchableOpacity>
             </View>
           </BlurView>
@@ -240,7 +318,9 @@ const styles = StyleSheet.create({
   chatList: {
     flex: 1,
     paddingHorizontal: 20,
-    paddingBottom: 160,
+  },
+  chatListContent: {
+    paddingBottom: 160, // Proper bottom padding for nav + extra space
   },
   chatItem: {
     marginBottom: 12,
@@ -342,22 +422,79 @@ const styles = StyleSheet.create({
     color: 'white',
     marginBottom: 15,
   },
+  quickActionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
   quickActionItem: {
+    alignItems: 'center',
+    width: '30%', // 3 items per row with spacing
+  },
+  quickActionGradient: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  quickActionText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  activitySection: {
+    marginBottom: 40,
+  },
+  activityBlur: {
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  activityContent: {
+    padding: 20,
+  },
+  activityTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: 'white',
+    marginBottom: 15,
+  },
+  activityItem: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 12,
   },
-  quickActionGradient: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+  activityIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
   },
-  quickActionText: {
+  activityInfo: {
+    flex: 1,
+  },
+  activityText: {
     color: 'white',
     fontSize: 14,
     fontWeight: '500',
+    marginBottom: 2,
+  },
+  activityTime: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 12,
   },
 })

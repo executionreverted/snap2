@@ -24,6 +24,13 @@ interface Story {
   isYours: boolean
 }
 
+interface UserStories {
+  username: string
+  avatar: string
+  stories: Story[]
+  hasUnviewed: boolean
+}
+
 interface Discover {
   id: string
   title: string
@@ -53,6 +60,24 @@ const mockStories: Story[] = [
   },
   {
     id: '2',
+    username: 'sarah_j',
+    avatar: '👩‍🦱',
+    content: '🌅',
+    timestamp: new Date(Date.now() - 1700000),
+    isViewed: false,
+    isYours: false
+  },
+  {
+    id: '3',
+    username: 'sarah_j',
+    avatar: '👩‍🦱',
+    content: '🍹',
+    timestamp: new Date(Date.now() - 1600000),
+    isViewed: false,
+    isYours: false
+  },
+  {
+    id: '4',
     username: 'mike_dev',
     avatar: '👨‍💻',
     content: '☕',
@@ -61,7 +86,16 @@ const mockStories: Story[] = [
     isYours: false
   },
   {
-    id: '3',
+    id: '5',
+    username: 'mike_dev',
+    avatar: '👨‍💻',
+    content: '💻',
+    timestamp: new Date(Date.now() - 7100000),
+    isViewed: true,
+    isYours: false
+  },
+  {
+    id: '6',
     username: 'emma_art',
     avatar: '👩‍🎨',
     content: '🎨',
@@ -70,7 +104,7 @@ const mockStories: Story[] = [
     isYours: false
   },
   {
-    id: '4',
+    id: '7',
     username: 'alex_space',
     avatar: '👨‍🚀',
     content: '🚀',
@@ -79,7 +113,7 @@ const mockStories: Story[] = [
     isYours: false
   },
   {
-    id: '5',
+    id: '8',
     username: 'luna_music',
     avatar: '👩‍🎤',
     content: '🎵',
@@ -103,21 +137,56 @@ interface StoriesScreenProps {
 }
 
 export default function StoriesScreen({ onOpenCamera }: StoriesScreenProps) {
-  const [selectedStoryIndex, setSelectedStoryIndex] = useState<number | null>(null)
+  const [selectedUserStories, setSelectedUserStories] = useState<UserStories | null>(null)
   const [showStoryViewer, setShowStoryViewer] = useState(false)
+
+  // Group stories by user
+  const groupedStories = React.useMemo(() => {
+    const groups: { [key: string]: UserStories } = {}
+
+    mockStories.forEach(story => {
+      if (story.isYours) return // Skip "Your Story" for viewer
+
+      if (!groups[story.username]) {
+        groups[story.username] = {
+          username: story.username,
+          avatar: story.avatar,
+          stories: [],
+          hasUnviewed: false
+        }
+      }
+
+      groups[story.username].stories.push(story)
+      if (!story.isViewed) {
+        groups[story.username].hasUnviewed = true
+      }
+    })
+
+    // Sort stories within each group by timestamp
+    Object.values(groups).forEach(group => {
+      group.stories.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
+    })
+
+    return Object.values(groups)
+  }, [])
 
   const handleStoryPress = (story: Story, index: number) => {
     if (story.isYours) {
       onOpenCamera?.()
       return
     }
-    setSelectedStoryIndex(index)
-    setShowStoryViewer(true)
+
+    // Find the user's story group
+    const userStories = groupedStories.find(group => group.username === story.username)
+    if (userStories) {
+      setSelectedUserStories(userStories)
+      setShowStoryViewer(true)
+    }
   }
 
   const handleCloseStoryViewer = () => {
     setShowStoryViewer(false)
-    setSelectedStoryIndex(null)
+    setSelectedUserStories(null)
   }
 
   const handleReplyToStory = (storyId: string, message: string) => {
@@ -178,11 +247,11 @@ export default function StoriesScreen({ onOpenCamera }: StoriesScreenProps) {
     </TouchableOpacity>
   )
 
-  if (showStoryViewer && selectedStoryIndex !== null) {
+  if (showStoryViewer && selectedUserStories) {
     return (
       <StoryViewer
-        stories={mockStories.filter(s => !s.isYours)}
-        initialIndex={selectedStoryIndex - 1} // Subtract 1 to account for "Your Story"
+        userStories={selectedUserStories}
+        allUserStories={groupedStories}
         onClose={handleCloseStoryViewer}
         onReply={handleReplyToStory}
       />
@@ -273,6 +342,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+    paddingBottom: 140, // Added proper bottom padding for nav
   },
   header: {
     paddingTop: 20,
@@ -432,7 +502,7 @@ const styles = StyleSheet.create({
   },
   featuredSection: {
     paddingHorizontal: 20,
-    paddingBottom: 120,
+    paddingBottom: 40,
   },
   featuredContainer: {
     paddingVertical: 10,
